@@ -15,7 +15,7 @@ def login_view(request):
         
         if user is None:
             messages.warning(request, 'El usuario o la cotraseña no son validos!')
-            return render(request, 'pages/core/login.html', context={'form' : LoginUsuario})
+            return render(request, 'pages/users/login.html', context={'form' : LoginUserForm})
         else:
             login(request, user)
             return redirect('products:sale_products')

@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
-from django.contrib.sessions.models import Session
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -17,10 +16,7 @@ def sale_products_view(request):
     products = Product.objects.filter(user=request.user, sale_date__date=current_date)
     consult = request.GET.get('search')
     
-    sale = 0
-    
-    for product in products:
-        sale += product.price * product.stock
+    sale = sum([product.price * product.stock for product in products ])
           
     if request.method == 'POST':
         
@@ -38,7 +34,6 @@ def sale_products_view(request):
                  messages.warning(request, "Error, La cantidad debe ser mayor a 1!")
             
             else:
-                
                 for product in products:
                     if new_product.name.replace(" ", "").lower() == product.name.replace(" ", "").lower():
                         messages.info(request, f"El producto {product.name} ya existe")
@@ -71,8 +66,6 @@ def sale_products_history_view(request):
     products = Product.objects.filter(user=request.user, sale_date__date=date)
     consult = request.GET.get('search')
     session = request.session
-
-    sale = 0
     
     if request.method == 'POST':
         if form.is_valid():
@@ -85,9 +78,7 @@ def sale_products_history_view(request):
         products = Product.objects.filter(user=request.user, sale_date__date=date)
         form = CalendarForm(request.POST or None, initial={'date': date})
     
-    for product in products:
-        sale += product.price * product.stock
-            
+    sale = sum([product.price * product.stock for product in products])        
     
     if consult:
         products = Product.objects.filter(Q(name__icontains=consult), user=request.user, sale_date__date=date)
