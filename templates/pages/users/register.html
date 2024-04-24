@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
 {% block title %}Registro{% endblock title %}
 
@@ -15,7 +16,7 @@
         <div>
           <label for="id_username" class="block text-sm font-medium leading-6 text-gray-900">Usuario</label>
           <div class="mt-2">
-           {{ form.username }}
+           {{ form.username|add_class:"block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }}
           </div>
         </div>
   
@@ -24,7 +25,7 @@
             <label for="id_password1" class="block text-sm font-medium leading-6 text-gray-900">Contraseña</label>
           </div>
           <div class="mt-2">
-            {{ form.password1 }}
+            {{ form.password1|add_class:"block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }}
           </div>
         </div>
 
@@ -33,7 +34,7 @@
             <label for="id_password2" class="block text-sm font-medium leading-6 text-gray-900">Confirmar Contraseña</label>
           </div>
           <div class="mt-2">
-            {{ form.password2 }}
+            {{ form.password2|add_class:"block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }}
           </div>
         </div>
   
