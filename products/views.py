@@ -39,27 +39,18 @@ class SaleProductsView(LoginRequiredMixin, View):
         if form.is_valid():
             new_product = form.save(commit=False)
             new_product.user = request.user
+            existing_product = products.filter(name__iexact=new_product.name).first()
             
-            if new_product.price < 50 or new_product.stock < 1:
-                message = "Error, "
-                if new_product.price < 50:
-                    message += "El precio debe ser mayor a 50. "
-                if new_product.stock < 1:
-                    message += "La cantidad debe ser mayor a 1."
-                messages.warning(request, message)
-            else:
-                existing_product = products.filter(name__iexact=new_product.name).first()
-                if existing_product:
-                    messages.info(request, f"El producto {existing_product.name} ya existe")
-                    return redirect("products:update_sale_product", pk=existing_product.id)
-                new_product.save()
-                messages.success(request, f"El producto {new_product.name} ha sido creado!")
-                return self.get(request)
+            if existing_product:
+                messages.info(request, f"El producto {existing_product.name} ya existe")
+                return redirect("products:update_sale_product", pk=existing_product.id)
             
+            new_product.save()
+            messages.success(request, f"El producto {new_product.name} ha sido creado!")
+            return self.get(request)
         else:
             messages.warning(request, "Los datos son inválidos")
-            
-        return self.get(request)
+            return self.get(request)
 
 class SaleProductsHistoryView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -101,7 +92,6 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         product = self.get_product(request, pk)
         form = UpdateProductForm(instance=product)
-        
         context = {'form': form, 'product': product}
         return render(request, 'pages/products/update_sale_product.html', context)
     
@@ -111,29 +101,17 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
         
         if form.is_valid():
             update_product = form.save(commit=False)
-            
-            if update_product.price < 50 or update_product.stock < 1:
-                message = "Error, "
-                if update_product.price < 50:
-                    message += "El precio debe ser mayor a 50. "
-                if update_product.stock < 1:
-                    message += "La cantidad debe ser mayor a 1."
-                messages.warning(request, message)
-            else:
-                update_product.save()
-                messages.success(request, f"El producto {update_product.name} ha sido actualizado!")
-                return redirect("products:sale_products")
-            
-        else:
-            messages.warning(request, "Los datos son inválidos!")
-            
+            update_product.save()
+            messages.success(request, f"El producto {update_product.name} ha sido actualizado!")
+            return redirect("products:sale_products")     
+        
+        messages.warning(request, "Los datos son inválidos!")
         context = {'form': form, 'product': product}
         return render(request, 'pages/products/update_sale_product.html', context)
 
 class SaleProductDeleteView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
-       product = get_object_or_404(Product, user=request.user, pk=pk)
-       
+       product = get_object_or_404(Product, user=request.user, pk=pk) 
        messages.info(request, f"El producto {product.name} ha sido eliminado!")
        product.delete()
        return redirect("products:sale_products")     

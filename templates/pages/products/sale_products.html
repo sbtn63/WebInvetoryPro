@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 {% load humanize %}
 
 {% block content %}
@@ -64,13 +65,13 @@
                 </div>
 
                 <label for="name" class="block text-sm font-medium dark:text-dark-txt text-gray-700">Nombre Producto</label>
-                {{ form.name }}
+                {{ form.name|add_class:"w-full block shadow-sm dark:bg-dark-third dark:focus:ring-dark-second focus:ring-indigo-500 dark:focus:border-dark-second dark:text-dark-txt focus:border-indigo-500 sm:max-w-xs sm:text-sm dark:border-dark-second border-gray-300 rounded-md" }}
 
                 <label for="stock" class="mt-2 block text-sm font-medium dark:text-dark-txt text-gray-700">Cantidad Vendida</label>
-                {{ form.stock }}
+                {{ form.stock|add_class:"w-full block shadow-sm dark:bg-dark-third dark:focus:ring-dark-second focus:ring-indigo-500 dark:focus:border-dark-second dark:text-dark-txt focus:border-indigo-500 sm:max-w-xs sm:text-sm dark:border-dark-second border-gray-300 rounded-md" }}
 
                 <label for="price" class="mt-2 mb-2 block text-sm font-medium dark:text-dark-txt text-gray-700">Precio Unidad</label>
-                {{ form.price }}
+                {{ form.price|add_class:"w-full block shadow-sm dark:bg-dark-third dark:focus:ring-dark-second focus:ring-indigo-500 dark:focus:border-dark-second dark:text-dark-txt focus:border-indigo-500 sm:max-w-xs sm:text-sm dark:border-dark-second border-gray-300 rounded-md" }}
 
                 <div class="control-group">
                     <div class="controls">

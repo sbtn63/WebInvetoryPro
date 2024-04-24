@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 {% load humanize %}
 
 {% block title %}Historial{% endblock title %}
@@ -43,7 +44,7 @@
   <div class="inline-block align-bottom dark:bg-dark-second bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">            
       <form class="form-horizontal dark:text-dark-txt" method="post" >
           {% csrf_token %}
-          {{ form.date}}
+          {{ form.date|add_class:"mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"}}
 
           <div class="control-group">
             <div class="controls">
