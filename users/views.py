@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect
 from django.db import IntegrityError
+from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 
 from .forms import RegisterUserForm, LoginUserForm
 
-def login_view(request):
-    if request.method == 'GET':
+
+class LoginView(View):
+    def get(self, request, *args, **kwargs):
         return render(request, 'pages/users/login.html', context={'form' : LoginUserForm})
     
-    else:
+    def post(self, request, *args, **kwargs):
         user = authenticate(request, username=request.POST['username'], password=request.POST['password'])
         
         if user is None:
@@ -20,11 +22,11 @@ def login_view(request):
             login(request, user)
             return redirect('products:sale_products')
 
-def register_view(request):
-    if request.method == 'GET':
+class RegisterView(View):
+    def get(self, request, *args, **kwargs):
         return render(request, 'pages/users/register.html', context={'form' : RegisterUserForm})
-        
-    else:
+    
+    def post(self, request, *args, **kwargs):
         if request.POST['password1'] == request.POST['password2']:
             
             try:
@@ -41,6 +43,7 @@ def register_view(request):
         messages.warning(request, 'Las Contraseñas no coinciden!')      
         return render(request, 'pages/users/register.html', context={'form' : RegisterUserForm})
 
-def logout_view(request):
-    logout(request)
-    return redirect('home')
+class LogoutView(View):
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return redirect('home')

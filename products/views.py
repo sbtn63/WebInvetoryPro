@@ -1,136 +1,139 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.db.models import Q
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 
 from .models import Product
 from .forms import ProductForm, UpdateProductForm, CalendarForm
 
-# Create your views here.
-
-@login_required
-def sale_products_view(request):
-    current_date = timezone.now()
-    form = ProductForm(request.POST or None, initial={'stock': 1})
-    products = Product.objects.filter(user=request.user, sale_date__date=current_date)
-    consult = request.GET.get('search')
+class SaleProductsView(LoginRequiredMixin, View):
+    def get_queryset(self, request):
+        current_date = timezone.now()
+        products = Product.objects.filter(user=request.user, sale_date__date=current_date)
+        return products
     
-    sale = sum([product.price * product.stock for product in products ])
-          
-    if request.method == 'POST':
+    def get(self, request, *args, **kwargs):
+        form = ProductForm(initial={'stock': 1})
+        products = self.get_queryset(request)
+        consult = request.GET.get('search')
+        
+        if consult:
+            products = products.filter(name__icontains=consult)
+            
+        sale = sum(product.price * product.stock for product in products)
+        
+        context = {
+            "products": products,
+            "form": form,
+            "sale": sale,
+            "current_date": timezone.now(),
+        }
+        
+        return render(request, 'pages/products/sale_products.html', context)
+    
+    def post(self, request, *args, **kwargs):
+        form = ProductForm(request.POST, initial={'stock': 1})
+        products = self.get_queryset(request)
         
         if form.is_valid():
             new_product = form.save(commit=False)
             new_product.user = request.user
             
-            if new_product.price < 50 and new_product.stock < 1:
-                messages.warning(request, "Error, Los datos precio y cantidad son incorrectos!")
-                
-            elif new_product.price < 50:
-                 messages.warning(request, "Error, El precio debe ser mayor a 50!")
-                 
-            elif new_product.stock < 1:
-                 messages.warning(request, "Error, La cantidad debe ser mayor a 1!")
-            
+            if new_product.price < 50 or new_product.stock < 1:
+                message = "Error, "
+                if new_product.price < 50:
+                    message += "El precio debe ser mayor a 50. "
+                if new_product.stock < 1:
+                    message += "La cantidad debe ser mayor a 1."
+                messages.warning(request, message)
             else:
-                for product in products:
-                    if new_product.name.replace(" ", "").lower() == product.name.replace(" ", "").lower():
-                        messages.info(request, f"El producto {product.name} ya existe")
-                        return redirect("products:update_sale_product", pk=product.id)
-                
-                messages.success(request, f"El producto {new_product.name} ha sido creado!")
+                existing_product = products.filter(name__iexact=new_product.name).first()
+                if existing_product:
+                    messages.info(request, f"El producto {existing_product.name} ya existe")
+                    return redirect("products:update_sale_product", pk=existing_product.id)
                 new_product.save()
-                return redirect("products:sale_products")
-        
+                messages.success(request, f"El producto {new_product.name} ha sido creado!")
+                return self.get(request)
+            
         else:
-            messages.warning(request, "Los datos son invalidos")
-    
-    if consult:
-        products = Product.objects.filter(Q(name__icontains=consult), user=request.user, sale_date__date=current_date)
-        
-    context = {
-        "products" : products,
-        "form" : form,
-        "sale" : sale,
-        "current_date": current_date,
-    }
-    
-    return render(request, 'pages/products/sale_products.html', context)
+            messages.warning(request, "Los datos son inválidos")
+            
+        return self.get(request)
 
-@login_required
-def sale_products_history_view(request):
-    date = timezone.localtime(timezone.now())
-    date = date.strftime('%Y-%m-%d')
-    form = CalendarForm(request.POST or None, initial={'date': date})
-    products = Product.objects.filter(user=request.user, sale_date__date=date)
-    consult = request.GET.get('search')
-    session = request.session
+class SaleProductsHistoryView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        session = request.session
+        date = session.get('date_history', timezone.localtime(timezone.now()).date())
+        form = CalendarForm(initial={'date': date})
+        consult = request.GET.get('search')
+        products = Product.objects.filter(user=request.user, sale_date__date=date)
+        
+        if consult:
+            products = products.filter(name__icontains=consult)
+        
+        sale = sum([product.price * product.stock for product in products])
+        
+        context = {
+            "products": products,
+            "sale": sale,
+            "form": form,
+            "date": date
+        }
+        
+        return render(request, 'pages/products/sale_products_history.html', context)
     
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
+        form = CalendarForm(request.POST)
+        
         if form.is_valid():
             date = form.cleaned_data['date']
-            session['date_history'] = date.isoformat()
-            products = Product.objects.filter(user=request.user, sale_date__date=date)
-    
-    if session.get('date_history'):
-        date = session.get('date_history')
-        products = Product.objects.filter(user=request.user, sale_date__date=date)
-        form = CalendarForm(request.POST or None, initial={'date': date})
-    
-    sale = sum([product.price * product.stock for product in products])        
-    
-    if consult:
-        products = Product.objects.filter(Q(name__icontains=consult), user=request.user, sale_date__date=date)
+            request.session['date_history'] = date.isoformat()
+            return self.get(request)
         
-    context = {
-        "products" : products,
-        "sale" : sale,
-        "form" : form,
-        "date" : date
-    }
+        messages.warning(request, "Los datos son inválidos")
+        return self.get(request)
     
-    return render(request, 'pages/products/sale_products_history.html', context)
+class SaleProductUpdateView(LoginRequiredMixin, View):
+    def get_product(self, request, pk):
+        return get_object_or_404(Product, user=request.user, pk=pk)
     
-
-@login_required
-def sale_product_update_view(request, pk):
-    product = get_object_or_404(Product, user=request.user, pk=pk)
-    form = UpdateProductForm(request.POST or None, instance=product)
+    def get(self, request, pk, *args, **kwargs):
+        product = self.get_product(request, pk)
+        form = UpdateProductForm(instance=product)
+        
+        context = {'form': form, 'product': product}
+        return render(request, 'pages/products/update_sale_product.html', context)
     
-    if request.method == 'POST':
+    def post(self, request, pk, *args, **kwargs):
+        product = self.get_product(request, pk)
+        form = UpdateProductForm(request.POST, instance=product)
         
         if form.is_valid():
             update_product = form.save(commit=False)
             
-            if update_product.price < 50 and update_product.stock < 1:
-                messages.warning(request, "Error, Los datos precio y cantidad son incorrectos!")
-                
-            elif update_product.price < 50:
-                 messages.warning(request, "Error, El precio debe ser mayor a 50!")
-                 
-            elif update_product.stock < 1:
-                 messages.warning(request, "Error, La cantidad debe ser mayor a 1!")
-                 
+            if update_product.price < 50 or update_product.stock < 1:
+                message = "Error, "
+                if update_product.price < 50:
+                    message += "El precio debe ser mayor a 50. "
+                if update_product.stock < 1:
+                    message += "La cantidad debe ser mayor a 1."
+                messages.warning(request, message)
             else:
-                
-                messages.success(request, f"El producto {update_product.name} ha sido actualizado!")
                 update_product.save()
+                messages.success(request, f"El producto {update_product.name} ha sido actualizado!")
                 return redirect("products:sale_products")
             
         else:
-            messages.warning(request, "Los datos son invalidos!")
-    
-    context = {
-        "form" : form,
-        "product" : product,
-    }
+            messages.warning(request, "Los datos son inválidos!")
+            
+        context = {'form': form, 'product': product}
+        return render(request, 'pages/products/update_sale_product.html', context)
 
-    return render(request, 'pages/products/update_sale_product.html', context)
-  
-@login_required  
-def sale_product_delete_view(request, pk):
-    product = get_object_or_404(Product, user=request.user, pk=pk)
-    messages.info(request, f"El producto {product.name} ha sido eliminado!")
-    product.delete()
-    return redirect("products:sale_products")
+class SaleProductDeleteView(LoginRequiredMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+       product = get_object_or_404(Product, user=request.user, pk=pk)
+       
+       messages.info(request, f"El producto {product.name} ha sido eliminado!")
+       product.delete()
+       return redirect("products:sale_products")     
