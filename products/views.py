@@ -18,8 +18,7 @@ class SaleProductsView(LoginRequiredMixin, View):
         products = self.get_queryset(request)
         consult = request.GET.get('search')
         
-        if consult:
-            products = products.filter(name__icontains=consult)
+        if consult: products = products.filter(name__icontains=consult)
             
         sale = sum(product.price * product.stock for product in products)
         
@@ -37,16 +36,15 @@ class SaleProductsView(LoginRequiredMixin, View):
         products = self.get_queryset(request)
         
         if form.is_valid():
-            new_product = form.save(commit=False)
-            new_product.user = request.user
-            existing_product = products.filter(name__iexact=new_product.name).first()
+            form.instance.user = request.user
+            existing_product = products.filter(name__iexact=form.instance.name).first()
             
             if existing_product:
                 messages.info(request, f"El producto {existing_product.name} ya existe")
                 return redirect("products:update_sale_product", pk=existing_product.id)
             
-            new_product.save()
-            messages.success(request, f"El producto {new_product.name} ha sido creado!")
+            form.save()
+            messages.success(request, f"El producto {form.instance.name} ha sido creado!")
             return self.get(request)
         else:
             messages.warning(request, "Los datos son inválidos")
@@ -60,8 +58,7 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         consult = request.GET.get('search')
         products = Product.objects.filter(user=request.user, sale_date__date=date)
         
-        if consult:
-            products = products.filter(name__icontains=consult)
+        if consult: products = products.filter(name__icontains=consult)
         
         sale = sum([product.price * product.stock for product in products])
         
@@ -100,9 +97,9 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
         form = UpdateProductForm(request.POST, instance=product)
         
         if form.is_valid():
-            update_product = form.save(commit=False)
-            update_product.save()
-            messages.success(request, f"El producto {update_product.name} ha sido actualizado!")
+            form.instance.user = request.user
+            form.save()
+            messages.success(request, f"El producto {form.instance.name} ha sido actualizado!")
             return redirect("products:sale_products")     
         
         messages.warning(request, "Los datos son inválidos!")
