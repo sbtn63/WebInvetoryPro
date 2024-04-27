@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+<div class="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[-20rem]" aria-hidden="true">
+    <div class="relative left-1/2 -z-10 aspect-[1155/678] w-[36.125rem] max-w-none -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-40rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+  </div>
+  <div class="mx-auto max-w-2xl text-center">
+    <h2 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Total Venta : {{ sale|intcomma }}</h2>
+
+    {% block date %}{% endblock date %}
+
+  </div>
+
+  {% block menu %}{% endblock menu %}
+
+</div>
+    
+
+<!-- Lista De productos vendidos-->
+<div class="w-9/12 m-auto">
+    <ul role="list" class="divide-y divide-gray-100">
+        {% for product in products %}
+        <li class="flex justify-between gap-x-6 py-5">
+          <div class="flex min-w-0 gap-x-4">
+            <div class="min-w-0 flex-auto">
+              <p class="text-sm font-semibold leading-6 text-gray-900">{{ product.name }}</p>
+              <p class="text-sm leading-6 text-gray-900 sm:hidden"><strong>Total Vendido:</strong> {{ product.total_sale|intcomma }}</p>
+              <p class="mt-1 truncate text-xs leading-5 text-gray-500 sm:hidden"><strong>Precio Unidad:</strong> {{ product.price|intcomma }}</p>
+              <p class="mt-1 text-xs leading-5 text-gray-500 sm:hidden"><strong>Cantidad Vendida:</strong> {{ product.stock }}</time></p>
+              <p class="mt-1 truncate text-xs leading-5 text-gray-500"><strong>Fecha Venta:</strong> {{ product.sale_date|date:"SHORT_DATE_FORMAT" }} , {{ product.sale_date|time:"H:i" }}</p>
+              
+              {% block actions %}{% endblock actions %}
+            
+            </div>
+          </div>
+          <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+            <p class="text-sm leading-6 text-gray-900"><strong>Total Vendido:</strong> {{ product.total_sale|intcomma }}</p>
+            <p class="mt-1 truncate text-xs leading-5 text-gray-500 "><strong>Precio Unidad:</strong> {{ product.price|intcomma }}</p>
+            <p class="mt-1 text-xs leading-5 text-gray-500"><strong>Cantidad Vendida:</strong> {{ product.stock }}</time></p>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+</div>
+</div>
+
+{% endblock content %}
