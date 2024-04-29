@@ -3,6 +3,8 @@ from django.utils import timezone
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.core.paginator import Paginator
+from django.http import Http404
 
 from .models import Product
 from .forms import ProductForm, UpdateProductForm, CalendarForm
@@ -17,13 +19,21 @@ class SaleProductsView(LoginRequiredMixin, View):
         form = ProductForm(initial={'stock': 1})
         products = self.get_queryset(request)
         consult = request.GET.get('search')
+        page = request.GET.get('page', 1)
         
         if consult: products = products.filter(name__icontains=consult)
             
         sale = sum(product.price * product.stock for product in products)
         
+        try:
+            paginator = Paginator(products, 4)
+            products = paginator.page(page)
+        except:
+            raise Http404
+        
         context = {
             "products": products,
+            "paginator" : paginator,
             "form": form,
             "sale": sale,
             "current_date": timezone.now(),
@@ -57,13 +67,21 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         form = CalendarForm(initial={'date': date})
         consult = request.GET.get('search')
         products = Product.objects.filter(user=request.user, sale_date__date=date)
+        page = request.GET.get('page', 1)
         
         if consult: products = products.filter(name__icontains=consult)
         
         sale = sum([product.price * product.stock for product in products])
         
+        try:
+            paginator = Paginator(products, 4)
+            products = paginator.page(page)
+        except:
+            raise Http404
+        
         context = {
             "products": products,
+            "paginator" : paginator,
             "sale": sale,
             "form": form,
             "date": date
