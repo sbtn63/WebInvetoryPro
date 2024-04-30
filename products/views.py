@@ -22,14 +22,11 @@ class SaleProductsView(LoginRequiredMixin, View):
         page = request.GET.get('page', 1)
         
         if consult: products = products.filter(name__icontains=consult)
-            
+        
         sale = sum(product.price * product.stock for product in products)
         
-        try:
-            paginator = Paginator(products, 4)
-            products = paginator.page(page)
-        except:
-            raise Http404
+        if not consult: products, paginator = pagination_products(products, page, 4)   
+        else: paginator = None
         
         context = {
             "products": products,
@@ -55,10 +52,10 @@ class SaleProductsView(LoginRequiredMixin, View):
             
             form.save()
             messages.success(request, f"El producto {form.instance.name} ha sido creado!")
-            return self.get(request)
+            return redirect("products:sale_products")
         else:
             messages.warning(request, "Los datos son inválidos")
-            return self.get(request)
+            return redirect("products:sale_products")
 
 class SaleProductsHistoryView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -70,14 +67,11 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         page = request.GET.get('page', 1)
         
         if consult: products = products.filter(name__icontains=consult)
-        
+
         sale = sum([product.price * product.stock for product in products])
         
-        try:
-            paginator = Paginator(products, 4)
-            products = paginator.page(page)
-        except:
-            raise Http404
+        if not consult: products, paginator = pagination_products(products, page, 4)   
+        else: paginator = None
         
         context = {
             "products": products,
@@ -95,10 +89,10 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         if form.is_valid():
             date = form.cleaned_data['date']
             request.session['date_history'] = date.isoformat()
-            return self.get(request)
+            return redirect('products:sale_products_history')
         
         messages.warning(request, "Los datos son inválidos")
-        return self.get(request)
+        return redirect('products:sale_products_history')
     
 class SaleProductUpdateView(LoginRequiredMixin, View):
     def get_product(self, request, pk):
@@ -129,4 +123,12 @@ class SaleProductDeleteView(LoginRequiredMixin, View):
        product = get_object_or_404(Product, user=request.user, pk=pk) 
        messages.info(request, f"El producto {product.name} ha sido eliminado!")
        product.delete()
-       return redirect("products:sale_products")     
+       return redirect("products:sale_products")
+   
+def pagination_products(products, page, amount):
+    try:
+        paginator = Paginator(products, amount)
+        products = paginator.page(page)
+        return products, paginator
+    except:
+        raise Http404
