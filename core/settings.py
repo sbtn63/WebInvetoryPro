@@ -1,3 +1,4 @@
+""" Settings Django """
 from pathlib import Path
 
 import os
@@ -33,15 +34,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    
     #Apps
     'core',
     'products',
     'users',
-    
     # other Django apps
     'widget_tweaks',
-    
     'tailwind',
     'theme',
 
