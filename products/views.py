@@ -104,13 +104,10 @@ class SaleProductsView(LoginRequiredMixin, View):
         products = self.get_queryset(request)
         consult = request.GET.get('search')
         page = request.GET.get('page', 1)
-
-        if consult:
-            products = products.filter(name__icontains=consult)
-
         sale = total_sale(products)
 
         if consult:
+            products = products.filter(name__icontains=consult)
             paginator = None
         else:
             products, paginator = pagination_products(products, page, 4)
@@ -186,16 +183,13 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         consult = request.GET.get('search')
         products = Product.objects.filter(user=request.user, sale_date__date=date)
         page = request.GET.get('page', 1)
+        sale = total_sale(products)
 
         if consult:
             products = products.filter(name__icontains=consult)
-
-        sale = total_sale(products)
-
-        if not consult:
-            products, paginator = pagination_products(products, page, 4)
-        else:
             paginator = None
+        else:
+            products, paginator = pagination_products(products, page, 4)
 
         context = {
             "products": products,
