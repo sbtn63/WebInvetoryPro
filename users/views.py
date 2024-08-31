@@ -12,8 +12,11 @@ from django.contrib.auth import login, logout
 # Importa el módulo para mostrar mensajes de usuario
 from django.contrib import messages
 
+# Importa `authenticate` y `update_session_auth_hash` para gestionar la autenticación del usuario.
+from django.contrib.auth import authenticate, update_session_auth_hash
+
 # Importa los formularios personalizados para el registro y el inicio de sesión de usuarios
-from .forms import RegisterUserForm, LoginUserForm
+from .forms import RegisterUserForm, LoginUserForm, UserChangeInfoForm
 
 
 class LoginView(View):
@@ -94,6 +97,75 @@ class RegisterView(View):
             return redirect('products:sale_products')
 
         return render(request, 'pages/users/register.html', context={'form': form})
+
+
+class UserChangeInfoView(View):
+    """
+    Vista para gestionar la actualización de la información del usuario.
+
+    Esta vista permite a los usuarios cambiar su nombre de usuario, dirección 
+    de correo electrónico y contraseña.
+    """
+    def get(self, request):
+        """
+        Muestra el formulario de actualización de usuario.
+
+        Este método maneja las solicitudes GET y renderiza el formulario para que 
+        el usuario pueda ingresar los datos que desea actualizar.
+
+        Parámetros:
+        - request: Objeto HttpRequest que contiene datos de la solicitud.
+
+        Retorna:
+        - Renderiza la plantilla de actualización de usuario con un formulario vacío o 
+        prellenado con los datos actuales.
+        """
+        form = UserChangeInfoForm(instance=request.user, current_user=request.user)
+        return render(request, 'pages/users/change.html', context={'form': form})
+
+    def post(self, request):
+        """
+        Procesa el formulario de actualización de usuario.
+
+        Este método maneja las solicitudes POST, valida el formulario y actualiza 
+        la información del usuario si los datos son válidos. También maneja la autenticación 
+        de la contraseña actual antes de realizar cambios en la cuenta del usuario.
+
+        Parámetros:
+        - request: Objeto HttpRequest que contiene datos de la solicitud, incluyendo los 
+        datos del formulario.
+
+        Retorna:
+        - Si el formulario es válido y la contraseña actual es correcta:
+          Redirige al usuario con un mensaje de éxito.
+        - Si la contraseña actual no es correcta:
+          Redirige al usuario con un mensaje de error.
+        - Si el formulario no es válido:
+          Renderiza la plantilla de actualización con el formulario y los errores.
+        """
+        current_username = request.user.username
+        form = UserChangeInfoForm(request.POST, instance=request.user, current_user=request.user)
+        if form.is_valid():
+            current_password = form.cleaned_data.get('current_password')
+            new_username = form.cleaned_data.get('username')
+            new_email = form.cleaned_data.get('email')
+            new_password = form.cleaned_data.get('password_new')
+            user = authenticate(username=current_username, password=current_password)
+            if user is not None:
+                if new_username and new_username != request.user.username:
+                    request.user.username = new_username
+                if new_email and new_email != request.user.email:
+                    request.user.email = new_email
+                if new_password:
+                    request.user.set_password(new_password)
+                    update_session_auth_hash(request, request.user)
+                request.user.save()
+                messages.success(request, 'Usuario actualizado correctamente!')
+                return redirect('users:change')
+            else:
+                messages.error(request, 'La contraseña actual no es correcta!')
+                return redirect('users:change')
+        return render(request, 'pages/users/change.html', context={'form': form})
 
 
 class LogoutView(View):

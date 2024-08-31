@@ -5,7 +5,7 @@
 
 {% block date %}
 
-<p class="my-2 text-lg leading-8 text-gray-600">{{ current_date|date:"SHORT_DATE_FORMAT" }}</p>
+<p>{{ current_date|date:"SHORT_DATE_FORMAT" }}</p>
 
 {% endblock date %}
 
@@ -22,12 +22,6 @@
               Agregar
           </span>
         </button>
-        <a href="{% url 'products:sale_products_history' %}" class="my-4 inline-flex float-right items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded dark:text-dark-txt text-yellow-700 dark:bg-dark-third bg-yellow-200 dark:hover:bg-dark-third hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-dark-third focus:ring-indigo-500">
-            Historial
-        </a>
-        <a href="{% url 'users:logout' %}" class="my-4 inline-flex float-right items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded dark:text-dark-txt text-red-700 dark:bg-dark-third bg-red-200 dark:hover:bg-dark-third hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-dark-third focus:ring-red-300">Salir</a>
-      </div>
-
   </div>
 
   <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click.away="open = false" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">

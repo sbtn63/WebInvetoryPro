@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+<div>
+
+  <div x-data="{ isSidebarOpen: false }" class="flex flex-col flex-1 overflow-y-auto">
+    
+    <!-- SideBar -->
+    <div :class="isSidebarOpen ? 'block' : 'hidden'">
+      {% include 'components/sidebar.html' %}
+    </div>
+     
+    <!-- NavBar -->
+    {% include 'components/navbar.html' %}
+
+  </div>
+
+  {% block container %}{% endblock container %}
+
+
+</div>
+
+{% endblock content %}
