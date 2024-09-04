@@ -1,10 +1,11 @@
 {% extends 'components/container.html' %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block container %}
 
 <div class="w-[80%] mx-auto">
-    <form class="px-4 md:px-8 max-w-3xl mx-auto py-4" method="post">
+    <form class=" flex gap-x-16 px-4 md:px-8 max-w-4xl mx-auto py-4" method="post">
         {% csrf_token %}
         <div class="w-full">
             <h2 class="text-base font-semibold leading-7 text-gray-900">Actualizar Información del Usuario</h2>
@@ -90,6 +91,10 @@
                 <a href="{% url 'products:sale_products' %}" class="text-sm font-semibold leading-6 text-gray-900">Cancelar</a>
                 <button type="submit" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Guardar cambios</button>
             </div>
+        </div>
+
+        <div class="lg:block hidden  lg:h-[400px] md:h-[600px] lg:mt-10">
+            <img src="{% static 'images/login.png' %}" class="w-full h-full max-md:w-5/6 mx-auto block object-cover" alt="Dining Experience" />
         </div>
     </form>
 </div>
