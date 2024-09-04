@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 # Importa utilidades para manejar la zona horaria
 from django.utils import timezone
+from datetime import datetime
 
 # Importa la clase base para vistas basadas en clases
 from django.views import View
@@ -196,7 +197,7 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
             "paginator": paginator,
             "sale": sale,
             "form": form,
-            "date": date
+            "date": datetime.strptime(date, '%Y-%m-%d').date() 
         }
         return render(request, 'pages/products/sale_products_history.html', context)
 
