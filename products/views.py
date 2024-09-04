@@ -197,7 +197,8 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
             "paginator": paginator,
             "sale": sale,
             "form": form,
-            "date": datetime.strptime(date, '%Y-%m-%d').date() 
+            #"date": datetime.strptime(date, '%Y-%m-%d').date() 
+            "date" : date
         }
         return render(request, 'pages/products/sale_products_history.html', context)
 
