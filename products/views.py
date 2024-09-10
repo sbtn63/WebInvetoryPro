@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 # Importa utilidades para manejar la zona horaria
 from django.utils import timezone
-from datetime import datetime
+#from datetime import datetime
 
 # Importa la clase base para vistas basadas en clases
 from django.views import View
@@ -181,13 +181,13 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         session = request.session
         date = session.get('date_history', timezone.localtime(timezone.now()).date())
         form = CalendarForm(initial={'date': date})
-        consult = request.GET.get('search')
+        consult = request.GET.get('search', '')
         products = Product.objects.filter(user=request.user, sale_date__date=date)
         page = request.GET.get('page', 1)
         sale = total_sale(products)
 
-        if consult:
-            products = products.filter(name__icontains=consult)
+        if consult and len(consult) >= 3:
+            products = products.filter(name__icontains=consult) 
             paginator = None
         else:
             products, paginator = pagination_products(products, page, 4)
