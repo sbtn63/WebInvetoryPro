@@ -103,11 +103,11 @@ class SaleProductsView(LoginRequiredMixin, View):
         """
         form = ProductForm(initial={'stock': 1})
         products = self.get_queryset(request)
-        consult = request.GET.get('search')
+        consult = request.GET.get('search', '')
         page = request.GET.get('page', 1)
         sale = total_sale(products)
 
-        if consult:
+        if consult and len(consult) >= 3:
             products = products.filter(name__icontains=consult)
             paginator = None
         else:
