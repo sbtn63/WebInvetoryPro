@@ -187,7 +187,7 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         sale = total_sale(products)
 
         if consult and len(consult) >= 3:
-            products = products.filter(name__icontains=consult) 
+            products = products.filter(name__icontains=consult)
             paginator = None
         else:
             products, paginator = pagination_products(products, page, 4)

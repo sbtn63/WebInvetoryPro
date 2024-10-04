@@ -6,6 +6,9 @@ from django.shortcuts import render, redirect
 # Importa la clase base para vistas basadas en clases
 from django.views import View
 
+# Importa mixins para requerir autenticación de usuarios
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 # Importa funciones para manejar la autenticación de usuarios
 from django.contrib.auth import login, logout
 
@@ -99,7 +102,7 @@ class RegisterView(View):
         return render(request, 'pages/users/register.html', context={'form': form})
 
 
-class UserChangeInfoView(View):
+class UserChangeInfoView(LoginRequiredMixin, View):
     """
     Vista para gestionar la actualización de la información del usuario.
 
@@ -168,7 +171,7 @@ class UserChangeInfoView(View):
         return render(request, 'pages/users/change.html', context={'form': form})
 
 
-class LogoutView(View):
+class LogoutView(LoginRequiredMixin, View):
     """
     Vista para gestionar el cierre de sesión de los usuarios.
     """
