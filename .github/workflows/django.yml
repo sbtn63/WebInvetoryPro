@@ -34,7 +34,7 @@ jobs:
     - name: Run flake8
       run: |
         pip install flake8
-        flake8 .  # Verifica todos los archivos del proyecto
+        flake8 . --exclude env,venv,.venv --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics # Verifica todos los archivos del proyecto
 
     # Ejecutar pip-audit para verificar vulnerabilidades de dependencias
     - name: Run pip-audit
