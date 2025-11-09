@@ -1,10 +1,13 @@
-""" Importaciones necesarias para la vista de inicio de sesión """
+"""Importaciones necesarias para la vista de inicio de sesión"""
 
 # Importa funciones para renderizar plantillas y redirigir a otras vistas
 from django.shortcuts import render, redirect
 
 # Importa la clase base para vistas basadas en clases
 from django.views import View
+
+# Importa mixins para requerir autenticación de usuarios
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Importa funciones para manejar la autenticación de usuarios
 from django.contrib.auth import login, logout
@@ -34,7 +37,9 @@ class LoginView(View):
         Retorna:
         - Renderiza la plantilla de inicio de sesión con un formulario vacío.
         """
-        return render(request, 'pages/users/login.html', context={'form': LoginUserForm})
+        return render(
+            request, "pages/users/login.html", context={"form": LoginUserForm}
+        )
 
     def post(self, request):
         """
@@ -45,7 +50,7 @@ class LoginView(View):
 
         Retorna:
         - Redirige a la página de productos si el inicio de sesión es exitoso.
-        - Renderiza nuevamente el formulario de inicio de sesión con mensajes de 
+        - Renderiza nuevamente el formulario de inicio de sesión con mensajes de
         advertencia si los datos son inválidos.
         """
         form = LoginUserForm(request, request.POST)
@@ -53,10 +58,10 @@ class LoginView(View):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('products:sale_products')
+            return redirect("products:sale_products")
 
-        messages.warning(request, 'El usuario o la contraseña no son válidos!')
-        return render(request, 'pages/users/login.html', context={'form': form})
+        messages.warning(request, "El usuario o la contraseña no son válidos!")
+        return render(request, "pages/users/login.html", context={"form": form})
 
 
 class RegisterView(View):
@@ -74,7 +79,9 @@ class RegisterView(View):
         Retorna:
         - Renderiza la plantilla de registro con un formulario vacío.
         """
-        return render(request, 'pages/users/register.html', context={'form': RegisterUserForm})
+        return render(
+            request, "pages/users/register.html", context={"form": RegisterUserForm}
+        )
 
     def post(self, request):
         """
@@ -84,7 +91,7 @@ class RegisterView(View):
         - request: Objeto HttpRequest que contiene los datos del formulario.
 
         Retorna:
-        - Redirige a la página de productos si el registro es exitoso y 
+        - Redirige a la página de productos si el registro es exitoso y
         el usuario inicia sesión automáticamente.
         - Renderiza nuevamente el formulario de registro con los errores si los datos son inválidos.
         """
@@ -93,46 +100,47 @@ class RegisterView(View):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, 'Usuario registrado correctamente!')
-            return redirect('products:sale_products')
+            messages.success(request, "Usuario registrado correctamente!")
+            return redirect("products:sale_products")
 
-        return render(request, 'pages/users/register.html', context={'form': form})
+        return render(request, "pages/users/register.html", context={"form": form})
 
 
-class UserChangeInfoView(View):
+class UserChangeInfoView(LoginRequiredMixin, View):
     """
     Vista para gestionar la actualización de la información del usuario.
 
-    Esta vista permite a los usuarios cambiar su nombre de usuario, dirección 
+    Esta vista permite a los usuarios cambiar su nombre de usuario, dirección
     de correo electrónico y contraseña.
     """
+
     def get(self, request):
         """
         Muestra el formulario de actualización de usuario.
 
-        Este método maneja las solicitudes GET y renderiza el formulario para que 
+        Este método maneja las solicitudes GET y renderiza el formulario para que
         el usuario pueda ingresar los datos que desea actualizar.
 
         Parámetros:
         - request: Objeto HttpRequest que contiene datos de la solicitud.
 
         Retorna:
-        - Renderiza la plantilla de actualización de usuario con un formulario vacío o 
+        - Renderiza la plantilla de actualización de usuario con un formulario vacío o
         prellenado con los datos actuales.
         """
         form = UserChangeInfoForm(instance=request.user, current_user=request.user)
-        return render(request, 'pages/users/change.html', context={'form': form})
+        return render(request, "pages/users/change.html", context={"form": form})
 
     def post(self, request):
         """
         Procesa el formulario de actualización de usuario.
 
-        Este método maneja las solicitudes POST, valida el formulario y actualiza 
-        la información del usuario si los datos son válidos. También maneja la autenticación 
+        Este método maneja las solicitudes POST, valida el formulario y actualiza
+        la información del usuario si los datos son válidos. También maneja la autenticación
         de la contraseña actual antes de realizar cambios en la cuenta del usuario.
 
         Parámetros:
-        - request: Objeto HttpRequest que contiene datos de la solicitud, incluyendo los 
+        - request: Objeto HttpRequest que contiene datos de la solicitud, incluyendo los
         datos del formulario.
 
         Retorna:
@@ -144,12 +152,14 @@ class UserChangeInfoView(View):
           Renderiza la plantilla de actualización con el formulario y los errores.
         """
         current_username = request.user.username
-        form = UserChangeInfoForm(request.POST, instance=request.user, current_user=request.user)
+        form = UserChangeInfoForm(
+            request.POST, instance=request.user, current_user=request.user
+        )
         if form.is_valid():
-            current_password = form.cleaned_data.get('current_password')
-            new_username = form.cleaned_data.get('username')
-            new_email = form.cleaned_data.get('email')
-            new_password = form.cleaned_data.get('password_new')
+            current_password = form.cleaned_data.get("current_password")
+            new_username = form.cleaned_data.get("username")
+            new_email = form.cleaned_data.get("email")
+            new_password = form.cleaned_data.get("password_new")
             user = authenticate(username=current_username, password=current_password)
             if user is not None:
                 if new_username and new_username != request.user.username:
@@ -160,15 +170,15 @@ class UserChangeInfoView(View):
                     request.user.set_password(new_password)
                     update_session_auth_hash(request, request.user)
                 request.user.save()
-                messages.success(request, 'Usuario actualizado correctamente!')
-                return redirect('users:change')
+                messages.success(request, "Usuario actualizado correctamente!")
+                return redirect("users:change")
             else:
-                messages.error(request, 'La contraseña actual no es correcta!')
-                return redirect('users:change')
-        return render(request, 'pages/users/change.html', context={'form': form})
+                messages.error(request, "La contraseña actual no es correcta!")
+                return redirect("users:change")
+        return render(request, "pages/users/change.html", context={"form": form})
 
 
-class LogoutView(View):
+class LogoutView(LoginRequiredMixin, View):
     """
     Vista para gestionar el cierre de sesión de los usuarios.
     """
@@ -184,4 +194,4 @@ class LogoutView(View):
         - Redirige al usuario a la página de inicio después de cerrar la sesión.
         """
         logout(request)
-        return redirect('home')
+        return redirect("home")

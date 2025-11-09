@@ -1,4 +1,4 @@
-""" Importa los módulos necesarios para definir el modelo Product """
+"""Importa los módulos necesarios para definir el modelo Product"""
 
 # Importa la clase base para los modelos de Django
 from django.db import models
@@ -7,6 +7,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 # Define el modelo Product para gestionar productos en la aplicación
+
 
 class Product(models.Model):
     """
@@ -23,6 +24,7 @@ class Product(models.Model):
     - __str__: Devuelve una representación en cadena del nombre del producto.
     - total_sale: Calcula el total de la venta (precio * stock).
     """
+
     name = models.CharField(max_length=255)
     price = models.PositiveIntegerField()
     stock = models.PositiveIntegerField(default=1)
@@ -36,7 +38,8 @@ class Product(models.Model):
         Ordering:
         - Ordena los productos por fecha de venta en orden descendente.
         """
-        ordering = ['-sale_date']
+
+        ordering = ["-sale_date"]
 
     def __str__(self):
         """
@@ -45,7 +48,7 @@ class Product(models.Model):
         Retorna:
         - Nombre del producto.
         """
-        return f'{self.name}'
+        return f"{self.name}"
 
     def total_sale(self):
         """

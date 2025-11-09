@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 # Importa utilidades para manejar la zona horaria
 from django.utils import timezone
 
+# from datetime import datetime
+
 # Importa la clase base para vistas basadas en clases
 from django.views import View
 
@@ -46,20 +48,21 @@ def pagination_products(products, page, amount):
         paginator = Paginator(products, amount)
         products = paginator.page(page)
         return products, paginator
-    except:
+    except Exception as exc:
         # Lanza una excepción Http404 si ocurre un error
-        raise Http404
+        raise Http404 from exc
+
 
 def total_sale(products):
     """
     Calcula el total de ventas de una lista de productos.
 
-    Esta función toma un QuerySet de productos y calcula el total 
-    de ventas multiplicando el precio de cada producto por su cantidad 
+    Esta función toma un QuerySet de productos y calcula el total
+    de ventas multiplicando el precio de cada producto por su cantidad
     en stock y sumando estos valores.
 
     Parámetros:
-    - products (QuerySet): Un conjunto de productos, donde cada producto 
+    - products (QuerySet): Un conjunto de productos, donde cada producto
     tiene atributos de precio (price) y cantidad en stock (stock).
 
     Retorna:
@@ -85,8 +88,7 @@ class SaleProductsView(LoginRequiredMixin, View):
         """
         current_date = timezone.now()
         products = Product.objects.filter(
-            user=request.user,
-            sale_date__date=current_date
+            user=request.user, sale_date__date=current_date
         )
         return products
 
@@ -100,13 +102,13 @@ class SaleProductsView(LoginRequiredMixin, View):
         Retorna:
         - Renderiza la plantilla de productos con los datos necesarios.
         """
-        form = ProductForm(initial={'stock': 1})
+        form = ProductForm(initial={"stock": 1})
         products = self.get_queryset(request)
-        consult = request.GET.get('search')
-        page = request.GET.get('page', 1)
+        consult = request.GET.get("search", "")
+        page = request.GET.get("page", 1)
         sale = total_sale(products)
 
-        if consult:
+        if consult and len(consult) >= 3:
             products = products.filter(name__icontains=consult)
             paginator = None
         else:
@@ -119,7 +121,7 @@ class SaleProductsView(LoginRequiredMixin, View):
             "sale": sale,
             "current_date": timezone.now(),
         }
-        return render(request, 'pages/products/sale_products.html', context)
+        return render(request, "pages/products/sale_products.html", context)
 
     def post(self, request):
         """
@@ -131,24 +133,18 @@ class SaleProductsView(LoginRequiredMixin, View):
         Retorna:
         - Redirige a la vista de productos con un mensaje de éxito o advertencia.
         """
-        form = ProductForm(request.POST, initial={'stock': 1})
+        form = ProductForm(request.POST, initial={"stock": 1})
         products = self.get_queryset(request)
 
         if form.is_valid():
             form.instance.user = request.user
-            existing_product = products.filter(
-                name__iexact=form.instance.name
-            ).first()
+            existing_product = products.filter(name__iexact=form.instance.name).first()
             if existing_product:
-                messages.info(
-                    request,
-                    f"El producto {existing_product.name} ya existe"
-                )
+                messages.info(request, f"El producto {existing_product.name} ya existe")
                 return redirect("products:update_sale_product", pk=existing_product.id)
             form.save()
             messages.success(
-                request,
-                f"El producto {form.instance.name} ha sido creado!"
+                request, f"El producto {form.instance.name} ha sido creado!"
             )
             return redirect("products:sale_products")
 
@@ -173,19 +169,19 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         - request: Objeto HttpRequest que contiene los datos de la solicitud.
 
         Retorna:
-        - Renderiza la plantilla con la lista de productos vendidos, 
+        - Renderiza la plantilla con la lista de productos vendidos,
         el formulario de selección de fecha,
           y el total de ventas para la fecha seleccionada.
         """
         session = request.session
-        date = session.get('date_history', timezone.localtime(timezone.now()).date())
-        form = CalendarForm(initial={'date': date})
-        consult = request.GET.get('search')
+        date = session.get("date_history", timezone.localtime(timezone.now()).date())
+        form = CalendarForm(initial={"date": date})
+        consult = request.GET.get("search", "")
         products = Product.objects.filter(user=request.user, sale_date__date=date)
-        page = request.GET.get('page', 1)
+        page = request.GET.get("page", 1)
         sale = total_sale(products)
 
-        if consult:
+        if consult and len(consult) >= 3:
             products = products.filter(name__icontains=consult)
             paginator = None
         else:
@@ -196,13 +192,14 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
             "paginator": paginator,
             "sale": sale,
             "form": form,
-            "date": date
+            # "date": datetime.strptime(date, '%Y-%m-%d').date()
+            "date": date,
         }
-        return render(request, 'pages/products/sale_products_history.html', context)
+        return render(request, "pages/products/sale_products_history.html", context)
 
     def post(self, request):
         """
-        Actualiza la fecha del historial de productos en la sesión y 
+        Actualiza la fecha del historial de productos en la sesión y
         redirige a la vista actualizada.
 
         Parámetros:
@@ -215,12 +212,12 @@ class SaleProductsHistoryView(LoginRequiredMixin, View):
         form = CalendarForm(request.POST)
 
         if form.is_valid():
-            date = form.cleaned_data['date']
-            request.session['date_history'] = date.isoformat()
-            return redirect('products:sale_products_history')
+            date = form.cleaned_data["date"]
+            request.session["date_history"] = date.isoformat()
+            return redirect("products:sale_products_history")
 
         messages.warning(request, "Los datos son inválidos")
-        return redirect('products:sale_products_history')
+        return redirect("products:sale_products_history")
 
 
 class SaleProductUpdateView(LoginRequiredMixin, View):
@@ -235,7 +232,7 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
 
     def get_product(self, request, pk):
         """
-        Recupera un producto específico basado en el identificador proporcionado 
+        Recupera un producto específico basado en el identificador proporcionado
         y el usuario actual.
 
         Parámetros:
@@ -260,8 +257,8 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
         """
         product = self.get_product(request, pk)
         form = UpdateProductForm(instance=product)
-        context = {'form': form, 'product': product}
-        return render(request, 'pages/products/update_sale_product.html', context)
+        context = {"form": form, "product": product}
+        return render(request, "pages/products/update_sale_product.html", context)
 
     def post(self, request, pk):
         """
@@ -273,7 +270,7 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
 
         Retorna:
         - Redirige a la lista de productos si el formulario es válido.
-        - Renderiza la plantilla de actualización del producto con mensajes 
+        - Renderiza la plantilla de actualización del producto con mensajes
         de advertencia si el formulario es inválido.
         """
         product = self.get_product(request, pk)
@@ -282,12 +279,15 @@ class SaleProductUpdateView(LoginRequiredMixin, View):
         if form.is_valid():
             form.instance.user = request.user
             form.save()
-            messages.success(request, f"El producto {form.instance.name} ha sido actualizado!")
+            messages.success(
+                request, f"El producto {form.instance.name} ha sido actualizado!"
+            )
             return redirect("products:sale_products")
 
         messages.warning(request, "Los datos son inválidos!")
-        context = {'form': form, 'product': product}
-        return render(request, 'pages/products/update_sale_product.html', context)
+        context = {"form": form, "product": product}
+        return render(request, "pages/products/update_sale_product.html", context)
+
 
 class SaleProductDeleteView(LoginRequiredMixin, View):
     """
