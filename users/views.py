@@ -171,10 +171,10 @@ class UserChangeInfoView(LoginRequiredMixin, View):
                     update_session_auth_hash(request, request.user)
                 request.user.save()
                 messages.success(request, "Usuario actualizado correctamente!")
-                return redirect("users:change")
+                return redirect("users:edit")
             else:
                 messages.error(request, "La contraseña actual no es correcta!")
-                return redirect("users:change")
+                return redirect("users:edit")
         return render(request, "pages/users/change.html", context={"form": form})
 
 
